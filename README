@@ -1,0 +1,91 @@
+##### Copyright 2021 Bucur Vladimir 311CA (vladimir.bucur1504@stud.acs.upb.ro)
+
+Impartirea programului in fisiere:
+	-exista 5 programe .c cu cod sursa impartite astfel: 
+			-main.c contine functia int main
+			-commands.c contine functiile care realizeaza comenzile LOAD,
+		SELECT, SELECT ALL, CROP, SAVE si EXIT
+			-rotate.c contine functiile care realizeaza comanda ROTATE
+			-filtres.c contine functiile care realizeaza apicarea celor
+		4 filtre: EDGE, SHARPEN, BLUR si GAUSSIAN BLUR
+			-auxilliary.c ce contine functii ajutatoare care sunt folosite
+		pentru realizarea diferitelor operatii(swap, alloc, free etc.)
+
+Idee generala
+	-pentru aceasta problema m-am folosit de 2 strucrui: file_image si pixel.
+In file_name am retinut parametrii imaginii(magic word, dimensiuni,valoarea
+maxima a unui pixel si zona selectata din acea imagine), iar pixel contine 3
+valori double in care se retine cantitatie le rosu, verde si albastru 
+pentru fiecare pixel
+	-toate operatiile de mai jos sunt introduse intr-un whiile pentru a putea
+fi folosite mai usors
+
+LOAD
+	-am facut o functe realizeaza citirea parametrilor unei imagini sarind peste
+posibilele comentarii
+	-functiile read_matrix_ascii si read_matrix_binary citesc in functie de
+imagine (daca este color sau nu) valorile pixelilor in format ascii respectiv
+binar
+	-cu ajutorul celor 2 functii de mai sus, in funtia load se preiau din
+fisiere imaginile in funtie de tipul lor, acestea fiind salvate cu ajutorul
+structurilor si a unei matrice pentru pixeli
+	-de asemenea, atunci cand se introduce o imagine noua, memoria alocata
+celei vechi va fi eliberata
+
+SELECT
+	-pentru a selecta o anumita zona din fotografie se preiau 4 parametrii de la
+tastatura care reprezinta coordonatele coltului din stanga sus si dreapta jos,
+iar cu functia check_parameters se verifica daca acestia sunt valizi sau nu
+	-cu ajutorul functiei select_matrix comanda citita de la tastatura este
+"desfacuta" si verificata daca este valida, iar in caz afirmativ se realizeaza
+selectia zonei indicate
+
+SELECT ALL
+	-aceast task se realizeaza folosoind functia select_all unde valorile din
+structura pentru zona selectata vor fi 0 respectiv dimensiunile fotografiei
+	-la fiecare incarcare de imagine noua aceasta este selectata in intregime
+automat
+
+ROTATE
+	-astea comanda este gandita separat pentru 2 cazuri separate: unul in care
+imaginea este selectata in totalitate si un in care se doreste rotirea doar
+unei parti din imagine
+	-rotirea imaginii complete se realizeaza prin combinatii de transpunere a
+matricei de pixeli si inversarea ordinii liniilor/coloanelor
+	-rotirea unei portiuni din imagine se realizeaza cu ajutorul unui vector
+auziliar in care se memoreaza colturile opuse zonei, zona este luata separat
+si rotita la 90 de grade apoi introdusa inapoi in poza. Pentru realizarea unei
+rotatii -90 +/-180 +/-270 de grade se apeleaza functia matrix_transpose de mai
+multe ori (valorile unghiurilor sunt multiplii de 90)
+
+CROP
+	-pentru aceasta comanda ne folosim de functia crop in care zona selectata
+se copiaza intr-o matrice auxiliara, iar dupa realocarea imaginii initiale,
+aceasta ia valoarea auxiliarei
+	-acum noua imagine este selected all
+
+APPLY
+	-aplicarea filtrelor este similara pentru fiecare filtru, singura diferenta
+fiind facuta de valorile matricei kernel
+	-se parcurge imaginea asigurandu-ne ca nu ne aflam pe margine pentru a fi
+convinsi ca fiecare pixel la care am ajuns are 8 vecini
+	-pentru fiecare pixel parcurs se realizeaza o matrice imaginara imaginara
+alaturi de vecinii sai, astfel fiecare element sin matrice este inmultit cu
+corespondentul sau din matricea kernel. Cu ajutorul a 3 variabile se realizeaza
+suma cantitatilor de rosu verde si albastru a tututor vecinilor, la final
+ficelul curent luand aceste valori
+	-pentru a ne asigura ca valorile obtinute sunt de o precizie maxima valorile
+au fost declarate double, iar la citire si afisarea am facute conversii la
+unsignec char. De asemenea pentru a ne asigura ca valorile pixelilor sunt
+pozitive si nu depasesc valoarea maxima suportata de imagine am folosit
+functia clamp
+
+SAVE
+	-pentru aceasca comanda am folosit functiile print_matrix_ascii si
+print_matrix_binary pentru a afisa in fisierele mentionate matricele de pixeli
+	-dupa ce s-a verificat daca in comanda apare precizarea savarii in format
+ascii, cu ajutorul functiei save am salvat imaginile in formatul corespunzator
+
+EXIT
+	-aceasta comanda nu are o functie speciala, insa consta in eliberarea
+memoriei matricei curente si oprirea posibilitatii de a mai da alta comanda
